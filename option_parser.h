@@ -5,7 +5,14 @@
 #include <stdio.h>
 
 typedef struct {
-    char* gt,lt,pl,mn,ls,le,pr,ai;
+    char* greaterThan,
+    *lessThan,
+    *pointerLeft,
+    *pointerRight,
+    *loopStart,
+    *loopEnd,
+    *printCur,
+    *askInput;
 } tbs; //Trivial Brainfuck Substitution
 
 typedef struct{
@@ -13,10 +20,6 @@ typedef struct{
     int gridSize;
     tbs* sub;
 } options;
-
-
-
-
 
 int init(char*,options*);
 

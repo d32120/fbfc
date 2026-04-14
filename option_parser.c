@@ -7,6 +7,48 @@
 
 #include "compiler.h"
 
+static int handlerForTbs(
+    void* user,
+    const char* _,
+    const char* name,
+    const char* value)
+{
+    tbs* tbs=user;
+#define cmp(arg) strcmp(arg, name)==0
+    if (cmp("greater")) {
+        tbs->greaterThan = _strdup(value);
+        return 1;
+    }
+    if (cmp("less")) {
+        tbs->lessThan = _strdup(value);
+        return 1;
+    }
+    if (cmp("loopend")) {
+        tbs->loopEnd = _strdup(value);
+        return 1;
+    }
+     if (cmp("loopstart")) {
+        tbs->loopStart = _strdup(value);
+         return 1;
+    } if (cmp("dot")) {
+        tbs->printCur = _strdup(value);
+        return 1;
+    }
+    if (cmp("comma")) {
+        tbs->askInput = _strdup(value);
+        return 1;
+    }
+    if (cmp("openBracket")) {
+        tbs->loopStart = _strdup(value);
+        return 1;
+    }
+    if (cmp("closeBracket")) {
+        tbs->loopEnd = _strdup(value);
+        return 1;
+    }
+    return 0;
+}
+
 static int handler(
     void* user,
     const char* _,
@@ -15,31 +57,21 @@ static int handler(
     )
 {
     options* options = user;
-#define cmp(arg) strcmp(arg, name)==0
 
+    #define cmp(arg) strcmp(arg, name)==0
     if (cmp("gridSize")) {
+
         char* nv = value;
         while (*nv!=' '){++nv;}
         options->gridSize = strtol(value,&nv,10);
+
     } else if (cmp("throw") ) {
         options->throw = strcmp("false",value);
+
     } else if (cmp("logs")) {
         options->logs = strcmp(value,"false");
-    } else if (cmp("asmoutput")) {
-        options->asmoutput= strcmp("false",value);
-    } else if (cmp("path")) {
-        options->assemblerPath = _strdup(value);
-    } else if (cmp("includes")) {
-        char* context;
-        char* string=_strdup(value);
-        const char* token = strtok_s(string, ",", &context);
-        int i=0;
-        while (token != NULL) {
-            options->includes[i] = _strdup(token);
-            i++;
-            if (i==15) ERROR("Too many imports")
-            token = strtok_s(NULL, "&", &context);
-        }
+    } else if (cmp("subs")) {
+        ini_parse(value,handlerForTbs,options->sub);
     }
     return 1;
 #undef cmp
@@ -48,6 +80,11 @@ static int handler(
 int init(char* name,options* opts) {
     const int res=ini_parse(name, handler, opts);
     switch (res) {
+#if INI_USE_STACK == 0
+        case -2: {
+            ERROR("Failed memory allocation")
+        }
+#endif
         case -1: {
             FERROR("Can't open file %s",name)
         }

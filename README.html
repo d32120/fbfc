@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>fbfc Guide</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f9f9f9;
+    }
+
+    .container {
+        display: flex;
+        margin: auto;
+        padding: 20px;
+    }
+
+    .content {
+        flex: 3.5;
+        background: #fff;
+        padding: 20px;
+    }
+
+    .sidebar {
+        flex: 1.5;
+        margin-right: auto;
+        margin-left:auto;
+        position: sticky;
+        top: 20px;
+        height: fit-content;
+        background: #f9f9f9;
+        border: 1px solid #ccc;
+    }
+
+    h1 {
+        font-size: 28px;
+        margin-bottom: 10px;
+        border: none; /* niente linea sotto */
+    }
+
+    h2 {
+        font-size: 20px;
+        border-bottom: 1px solid #ccc;
+        font-weight: 500;
+        padding-bottom: 4px;
+    }
+
+    p {
+        line-height: 1.6;
+    }
+
+    .sbtitle {
+        font-weight: bold;
+        margin:auto;
+        margin-bottom: 10px;
+    }
+
+    .toc ul {
+        list-style: none;
+        padding-left: 10px;
+    }
+
+    .toc li {
+        margin: 5px 0;
+        gap:3px;
+    }
+
+    .toc a {
+        text-decoration: none;
+        color: #0645ad;
+    }
+
+    .toc a:hover {
+        text-decoration: underline;
+    }
+    .offsetted{
+        margin-left:15px;
+        width:100%;
+       height:fit-content;
+    text-overflow: clip;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="toc">
+            <div class="sbtitle">Index</div>
+            <ul>
+                <li><a href="#wibf">What is BrainF**k?</a></li>
+                <li><a href="#wiac">What is a compiler?</a></li>
+                <li><a href="#hdtcw"> How does this compiler works?</a></li>
+                <li><a href="#sezione1">Installation</a></li>
+                <li><a href="#sezione2">Usage</a>
+                    <br>
+                    <a class="offsetted" href="#">Compile</a><br/>
+                    <a class="offsetted" href=#>Obtain assembly output</a>
+                    
+                </li>
+        
+                
+            </ul>
+        </div>
+    </div>
+    
+    <div class="content">
+        <h1>FBFC - Francesco's BrainF**k Compiler</h1>
+        <h2 id="wibf">What is BrainF**k?</h2>
+
+    <p><a href="https://esolangs.org/wiki/Brainfuck">Brainf**k</a> 
+        is a minimal esoteric programming language (esolang). 
+        It operates in an array of bytes of fixed size, 
+        with the index taken as its modulus calculated on the grid size
+        It consists in only eight symbols,which performs different actions:</p><ul>
+    <li><code>+</code> : increment the value in the current cell</li>
+    <li><code>-</code> : decrement the value in the current cell</li>
+    <li><code>&lt;</code> : moves the pointer to the previous cell (if the cell is the first, it goes to the last)</li>
+    <li><code>&gt;</code> : moves the pointer to the next cell (if the cell is the last, it goes to the first)</li>
+    <li><code>[</code> : starts a loop </li>
+    <li><code>]</code> : closes a loop. The code inside the loop is executed until the cell where the pointer is before the end of the loop is non-zero</li>
+    <li><code>.</code> : prints the value inside the cell pointed by the pointer taken as an <a href="https://it.wikipedia.org/wiki/ASCII">ASCII</a> character</li>
+    <li><code>,</code> : asks the user for an input. The input must be 1-character long and ASCII-representable (not something as &#989;)</li>
+    </ul>
+    <p>All the remaining characters are considered a comment.</p>
+    
+        <h2 id="caratteristiche">Caratteristiche</h2>
+        <p>Nonostante la sua semplicità apparente, Brainfuck è Turing completo, il che significa che può teoricamente eseguire qualsiasi calcolo computabile.</p>
+
+        <h2 id="link">Collegamenti esterni</h2>
+        <p>
+            Per ulteriori informazioni, visita la pagina ufficiale su Esolangs:
+            <br>
+            <a href="https://esolangs.org/wiki/Brainfuck" target="_blank">
+                https://esolangs.org/wiki/Brainfuck
+            </a>
+        </p>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

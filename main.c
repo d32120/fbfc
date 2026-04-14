@@ -57,5 +57,6 @@ int main(int argc, char **argv) {
        return 0;
    }
     nasmCompile("bfproject.asm");
+    puts("Compiled project into an object file. Now pass it into the linker.");
     return 0;
 }

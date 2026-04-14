@@ -9,30 +9,31 @@
 #define KILOBYTE 1024
 #define DEBUG
 
-#define ARG_POS false
-#define ARG_VAL true
 
-#define GETINPUT
-#define PRINT
-
+//prints a formatted string in the buffer. If it's full, the buffer gets flushed to output
+//params : output : the output file to print flushed chars
+//         reqc   : the number of chars requested
+//         format : the same you would pass to printf
 void fbufwf(FILE* output,int reqc, char* format, ...) {
     static char buffer[KILOBYTE]={0};
-    static int bufindex=0;
-    if (bufindex+reqc>=sizeof(buffer)-2) { //1001 caratteri bufferizzati, reqc della string che viene e un null
+    static int index=0;
+    if (index+reqc>=1022) { //1001 caratteri bufferizzati, reqc della string che viene e un null
         fputs(buffer,output);
-        bufindex=0;
-        for (int i=0;i<1023;i++) { //zero all the buffer
-            buffer[bufindex]=0;
+        index=0;
+        for (int i=0;i<1023;i++) { //zero all the buffer to be safe
+            buffer[i]=0;
         }
     }
     va_list args;
     va_start(args, format);
-    vsprintf_s(buffer,reqc,format,args); //FIXME
+    vsprintf_s(buffer,reqc,format,args);
     va_end(args);
 }
 
+//flushes the buffer
+#define fbufflush(output) fbufwf(output,2000,"")
 
-void addPointer(int value,FILE* output) {
+void addPointer(const int value, FILE* output) {
     switch (value) { //Z
         case-1: {
             fbufwf(output,8,"dec rbx\n");
@@ -51,11 +52,11 @@ void addPointer(int value,FILE* output) {
     } //Z-[-1,INF)
     fbufwf(output,14,"sub rbx,%-5X\n",-value);
 }
-void movePointer(int cpos,FILE* output) {
+void movePointer(const int cpos,FILE* output) {
     fbufwf(output,13,"mov rbx,%-5X",cpos);
 }
 
-void changeValue(int value,FILE* output) {
+void changeValue(const int value,FILE* output) {
     switch (value) {
         case-1: {
             fbufwf(output,14,"dec [arp+rbx]\n");
@@ -79,7 +80,13 @@ int exitOpcode(FILE* output) {
     fputs("mov rax,60\nxor rdi,rdi\nsyscall\n\0",output); //FIXME
     return 0;
 }
-int timesAppearConsec(char c,char* buf) {
+
+
+// returns the time che char c appears in the char[] buf
+// When the function returns, buf points to the first char different from c
+// param : c   : the char to check
+//         buf : the char[] representing the string
+int timesAppearConsec(const char c, const char* buf) {
     int res=0;
     while (*buf==c) {
         res++;
@@ -88,74 +95,71 @@ int timesAppearConsec(char c,char* buf) {
     return res;
 }
 
-
 void setCycle(int lno,FILE* output) {
-    fbufwf(
-        output,
-        8,
-        "l%-5x:\n", //max 5-digit number,
+    fbufwf(output,8,"l%-5x:\n", //max 5-digit number,
         lno
     );
 }
 
-void closeCycle(int cpos,int lno,FILE* output) {
+void closeCycle(const int lno,FILE* output) {
     fbufwf(
         output,
-        18+3*11,
-        "cmp [arp+%-5i],0\n" // 18
-        "jz le%-5x\n" //11
-        "jmp l%-5x\n" //11
-        "\nle%-5x:\n",//11
-        cpos,
-        lno,
-        lno,
+        28,
+        "cmp [arp+rbx],0\n" //17
+        "jnz l%-5x\n", //11
         lno
         );
 }
 
-int transpileToAsm(char* input, FILE *output, const int gridSize) {
+int transpileToAsm(const char* input, FILE *output, const int gridSize) {
     int cpos=0, linecount=0;
     int locl=0; //Last Opened Cycle Line
     int lnesting=0; //How many cycles are nested
     int lno=0; // The label
-    while (input!=NULL&&*input!=0) {
+    while (input!=NULL && *input!=0) {
+
+#define incrementAndExit() input++;break
         switch (*input) {
             case'\n': {
                 linecount++;
-                break;
+                incrementAndExit();
             }
             case'[': {
                 lno++;
                 locl=linecount;
                 lnesting++;
                 setCycle(lno,output);
-                break;
+                incrementAndExit();
             }
             case']': {
                 if (lnesting<=0) {
                     FERROR("A closed loop was not opened at line %i",linecount)
                 }
-                closeCycle(cpos,lno-1,output);
+                closeCycle(lno-1,output);
                 lnesting--;
+                incrementAndExit();
             }
             case'+': {
-                const int vta=timesAppearConsec('+',input);
+                const int vta = timesAppearConsec('+',input);
                 changeValue(vta,output);
+                //No need to incrementAndExit because input is already pointing to the next char
                 break;
             }
             case'-':{
                 const int vts=-timesAppearConsec('-',input); //- because it returns back
                 changeValue(vts,output);
+                //No need to incrementAndExit because input is already pointing to the next char
                 break;
             }
             case'>':{
-                int dpos=timesAppearConsec('>',input);
-                const int temp=cpos+dpos;
-                if (temp>gridSize||temp<0){
+                const int dpos = timesAppearConsec('>',input);
+                const int temp = cpos+dpos; // to avoid repeated sums
+                if (temp > gridSize || temp < 0){
                     movePointer((cpos=temp%gridSize),output);
                 } else {
                     addPointer(cpos+=dpos,output);
                 }
+                //No need to incrementAndExit because input is already pointing to the next char
                 break;
                 }
             case'<': {
@@ -166,33 +170,40 @@ int transpileToAsm(char* input, FILE *output, const int gridSize) {
                 } else {
                     addPointer(cpos-=dpos,output);
                 }
+                //No need to incrementAndExit because input is already pointing to the next char
                 break;
+            }
+            case'.': {
+                fbufwf("call  "); //FIXME
+            }
+            case',': {
+                fbufwf("call ") //FIXME TOO
             }
             default: {
                 #ifdef DEBUG
-                RERROR("A char escaped the preprocessing%c",'!',-1);
+                RERROR("A char escaped the preprocessing! %c",*input,-1);
                 #else
                 break;
                 #endif
             }
         }
-        ++input;
     }
     if (lnesting>0) {
         RERROR("Missing closing cycle at line %i",locl,-1);
     }
     exitOpcode(output);
+    fbufflush(output);
     return 0;
 }
 
-char* preprocess(FILE* input,options* opts) {
+char* filterOutGarbage(FILE* input, const options* opts) {
     int c=0;
     int bufs=KILOBYTE;
     char* cp = malloc(bufs*sizeof(char));
     if (!cp) {
         RERROR("Failed to allocate memory for char* preprocess. errno:%i",errno,NULL)
     }
-    char* cp0=cp;
+    char* cp0=cp; // save the start of the block of memory
     bool isComment=false;
     while ((c=getc(input))!=EOF){
         switch (c){
@@ -248,7 +259,7 @@ void createHeader(FILE* output, const options* opts) {
     FILE* header;
     fopen_s(
         &header,
-        "bfheader.nasm.asm",
+        "bfheader.nasm.asm", //FIXME
         "r");
     int c;
     char buf[1024]={0}; //0..1023
@@ -279,7 +290,7 @@ int compileToAsm(FILE* input,options* opts) {
     if (err2!=0) {
         FERROR("Error creating output file. Error code: %i",err2);
     }
-    char* cp = preprocess(input,opts);
+    char* cp = filterOutGarbage(input,opts);
     if (cp==NULL) {
         free(opts);
         fclose(output);
