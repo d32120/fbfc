@@ -1,11 +1,9 @@
 #include "option_parser.h"
-#include "include/inih/ini.h"
+#include "../include/inih/ini.h"
+#include "mmemory.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "compiler.h"
 
 static int handlerForTbs(
     void* user,
@@ -61,7 +59,7 @@ static int handler(
     #define cmp(arg) strcmp(arg, name)==0
     if (cmp("gridSize")) {
 
-        char* nv = value;
+        char* nv = (char*)value;
         while (*nv!=' '){++nv;}
         options->gridSize = strtol(value,&nv,10);
 

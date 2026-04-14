@@ -13,7 +13,6 @@
 #define CLI_VERSION 0x0021002B
 
 #include <stdio.h>
-#include <stddef.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
@@ -189,10 +188,9 @@ static int cli_parse_short(cli_option_t *opt, char **cur)
 static int cli_parse_long(cli_option_t *opt, char **cur) {
   char *d = *cur;
   int flags = 0;
-  int offset;
   while (cli_is_skipchr(*d)) d++;
   cli__trace("Checking: %s",d);
-  offset = d - opt->def;
+  int offset = (int) (d - opt->def);
   if (d[0] == '-' && d[1] == '-' && isalpha(d[2])) {
     flags = CLI_OPT_FLAG_LONG;
   }
@@ -217,7 +215,6 @@ static int cli_parse_long(cli_option_t *opt, char **cur) {
 
 static int cli_parse_argname(cli_option_t *opt, char **cur) {
   char *d = *cur;
-  int offset;
   int flags = CLI_OPT_ARGUMENT;
 
   while (cli_is_skipchr(*d)) d++;
@@ -226,7 +223,7 @@ static int cli_parse_argname(cli_option_t *opt, char **cur) {
 
   if (!isalpha(*d)) return 0;
   
-  offset = d - opt->def;
+  int offset = (int) (d - opt->def);
   do {d++;} while (*d == '-' || isalnum(*d));
   if (opt->optname_len == 0) { // It's a positional argument
     opt->optname_offset = offset;
@@ -326,10 +323,10 @@ static char *cli_remove_slash(char *s)
 
 static int cli_print_cmd(char *cmd)
 {
-  char *s = cmd;
+  char *s;
   
   fputs("  ",stderr);
-  for (s = cmd; *s && *s != '\'' && *s != '<'; s++) 
+  for (s = cmd; *s && *s != '\'' && *s != '<'; s++)
     fputc(*s,stderr);
   
   if (!*s) return 0;
@@ -347,7 +344,7 @@ static int cli_print_cmd(char *cmd)
 #define CLIEXIT 1
 #define cliusage(...)   cli_usage(__VA_ARGS__+0)
 
-int cli_usage(int xt) {
+int cli_usage(const int xt) {
   cli_option_t *opt;
 
   if (cliheader != NULL) fprintf(stderr,"%s\n",cliheader);
@@ -393,7 +390,7 @@ static char *cli_get_arg(cli_option_t *opt, char *arg)
       && !(cliargv[clindx+1][0] == '-' && cliargv[clindx+1][1]!='\0'))
     cliarg = cliargv[++clindx];
 
-  // If the arg is not optional and we didn't find one
+  // If the arg is not optional, and we didn't find one
   if (!(opt->flags & CLI_OPT_OPTIONAL) && cliarg == cli_emptystr) {
     clierror(clierrormsg,arg);
     opt->flags |= CLI_OPT_ARG_ERROR;
@@ -405,7 +402,7 @@ static char *cli_get_arg(cli_option_t *opt, char *arg)
 // Reparse is needed when the user puts together multiple short options
 // like in `ps -aux` instead of `ps -a -u -x`.
 
-// This tells which char too look at into the arg
+// This tells which char to look at into the arg
 static int cli_reparse_ndx = 1; 
 
 // If it's 1 we're looking at the first not (we're not reparsing)
@@ -440,7 +437,7 @@ static int cli_check_long(cli_option_t *opt, char *arg)
 
   if ((opt->flags & CLI_OPT_COMMAND) && (cli_cmd_found)) return 0; // cmds can only appear once
   if (strncmp(arg, opt->def+opt->optname_offset, opt->optname_len) != 0) return 0;
-  if (opt->flags & CLI_OPT_COMMAND) cli_cmd_found = 1; // cmds can only appears as first argument (possibly after some '-' options)
+  if (opt->flags & CLI_OPT_COMMAND) cli_cmd_found = 1; // cmds can only appear as first argument (possibly after some '-' options)
   
   if (arg[opt->optname_len] != '\0' && arg[opt->optname_len] != '=') return 0;
   

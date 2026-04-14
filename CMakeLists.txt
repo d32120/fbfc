@@ -5,7 +5,8 @@ set(CMAKE_C_STANDARD 11)
 
 add_executable(bfc
         main.c
-        compiler.c
-        option_parser.c
+        c/compiler.c
+        c/option_parser.c
+        c/mmemory.c
         include/inih/ini.c
 )

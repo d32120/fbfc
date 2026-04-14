@@ -1,9 +1,9 @@
 #include <stdlib.h>
 
 #include "compiler.h"
-#include "option_parser.h"
+#include "c/mmemory.h"
+#include "c/option_parser.h"
 #include "include/cli/cli.h"
-#include "include/inih/ini.h"
 
 int main(int argc, char **argv) {
     bool outAsm = false;
@@ -33,18 +33,15 @@ int main(int argc, char **argv) {
             throw = 0;
         }
 
-        cliopt() {                                  // mandatory catch-all, last
+        cliopt() {    // mandatory catch-all, last
             if (cliarg[0] == '!') {cliexit();}      // stop scanning
         }
     }
-    options* opts=malloc(sizeof(options));
-    if (optsn==NULL) {
-        ERROR("No options file provided")
-    }
-    init(optsn,opts);
+    options opts;
+    init(optsn,&opts);
     switch (throw) {
-        case 1: opts->throw=true;break;
-        case 0 :opts->throw=false;break;
+        case 1: opts.throw=true;break;
+        case 0 :opts.throw=false;break;
         default:break;
     }
     FILE* inf;
@@ -52,7 +49,7 @@ int main(int argc, char **argv) {
     if (inf==NULL) {
         ERROR("Could not open input file")
     }
-    compileToAsm(inf,opts);
+    compileToAsm(inf,&opts);
    if (outAsm) {
        return 0;
    }

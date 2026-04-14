@@ -1,10 +1,8 @@
 #include "compiler.h"
+#include "mmemory.h"
 
 #include <stdarg.h>
-#include <stdint.h>
 #include <stdlib.h>
-
-#include "option_parser.h"
 
 #define KILOBYTE 1024
 #define DEBUG
@@ -64,20 +62,21 @@ void changeValue(const int value,FILE* output) {
         }
         case 0:return;
         case 1: {
-            fbufwf(output,7, "inc [arp+rbx]\n");
+            fbufwf(output,14, "inc [arp+rbx]\n");
             return;
         }
         default:break;
     }
     if (value>1) {
-        fbufwf(output,13,"add rbx,%-5X",value);
+        fbufwf(output,19,"add [arp+rbx],%-5X",value);
         return;
     }
-    fbufwf(output,13,"sub rbx,%-5X",-value);
+    fbufwf(output,19,"sub [arp+rbx],%-5X",-value);
 }
 
 int exitOpcode(FILE* output) {
-    fputs("mov rax,60\nxor rdi,rdi\nsyscall\n\0",output); //FIXME
+    fbufwf(output,9,"call EXIT");
+    fbufflush(output);
     return 0;
 }
 
@@ -111,7 +110,7 @@ void closeCycle(const int lno,FILE* output) {
         );
 }
 
-int transpileToAsm(const char* input, FILE *output, const int gridSize) {
+RETURNS_OR_EXITS void transpileToAsm(const char* input, FILE *output, const int gridSize) {
     int cpos=0, linecount=0;
     int locl=0; //Last Opened Cycle Line
     int lnesting=0; //How many cycles are nested
@@ -177,11 +176,11 @@ int transpileToAsm(const char* input, FILE *output, const int gridSize) {
                 fbufwf("call  "); //FIXME
             }
             case',': {
-                fbufwf("call ") //FIXME TOO
+                fbufwf("call "); //FIXME TOO
             }
             default: {
                 #ifdef DEBUG
-                RERROR("A char escaped the preprocessing! %c",*input,-1);
+                FERROR("A char escaped the preprocessing! %c",*input);
                 #else
                 break;
                 #endif
@@ -189,19 +188,18 @@ int transpileToAsm(const char* input, FILE *output, const int gridSize) {
         }
     }
     if (lnesting>0) {
-        RERROR("Missing closing cycle at line %i",locl,-1);
+        FERROR("Missing closing cycle at line %i",locl);
     }
     exitOpcode(output);
     fbufflush(output);
-    return 0;
 }
 
-char* filterOutGarbage(FILE* input, const options* opts) {
+NOT_NULL char* filterOutGarbage(FILE* input, const options* opts) {
     int c=0;
     int bufs=KILOBYTE;
     char* cp = malloc(bufs*sizeof(char));
     if (!cp) {
-        RERROR("Failed to allocate memory for char* preprocess. errno:%i",errno,NULL)
+        FERROR("Failed to allocate memory for char* preprocess. errno:%i",errno)
     }
     char* cp0=cp; // save the start of the block of memory
     bool isComment=false;
@@ -220,8 +218,7 @@ char* filterOutGarbage(FILE* input, const options* opts) {
                 if (cp-cp0>=bufs) {
                     char* ap = realloc(cp0,(bufs+=256*sizeof(char)));
                     if (!ap) {
-                        free(cp0);
-                        RERROR("Failed to allocate memory for char* preprocess. errno:%i",errno,NULL);
+                        FERROR("Failed to allocate memory for char* preprocess. errno:%i",errno);
                     }
                     const ptrdiff_t offset = cp - cp0;
                     cp0 = ap;
@@ -234,8 +231,7 @@ char* filterOutGarbage(FILE* input, const options* opts) {
             }
             default: {
                 if (isComment && opts -> throw) {
-                    free(cp0);
-                    RERROR("Unexpected char found: \'%c\'. To disable this error, set throw=false in file options.bfo",c,NULL)
+                    FERROR("Unexpected char found: \'%c\'. To disable this error, set throw=false in file options.bfo",c)
                 }
             }
         }
@@ -244,8 +240,7 @@ char* filterOutGarbage(FILE* input, const options* opts) {
         const ptrdiff_t offset = cp - cp0;
         char* ap2 = realloc(cp0, bufs += 1);
         if (!ap2) {
-            free(cp0);
-            RERROR("Failed to allocate memory for char* preprocess. errno:%i",errno,NULL)
+            FERROR("Failed to allocate memory for char* preprocess. errno:%i",errno)
         }
         cp0 = ap2;
         *(cp0+offset)=0;
@@ -254,7 +249,7 @@ char* filterOutGarbage(FILE* input, const options* opts) {
     }
     return cp0;
 }
-
+//Check for errors
 void createHeader(FILE* output, const options* opts) {
     FILE* header;
     fopen_s(
@@ -277,35 +272,24 @@ void createHeader(FILE* output, const options* opts) {
     fclose(header);
 }
 
-FILE* getFile(char* name) {
+NOT_NULL FILE* getFile(char* name) {
     FILE* fp;
     fopen_s(&fp, name, "r");
-    if (!fp) RERROR("Error opening file %s",name,NULL)
+    if (!fp) FERROR("Error opening file %s",name)
     return fp;
 }
 
-int compileToAsm(FILE* input,options* opts) {
+RETURNS_OR_EXITS void compileToAsm(FILE* input, const options* opts) {
     FILE* output;
     const errno_t err2 = fopen_s(&output,"bfproject.asm","w");
     if (err2!=0) {
         FERROR("Error creating output file. Error code: %i",err2);
     }
-    char* cp = filterOutGarbage(input,opts);
-    if (cp==NULL) {
-        free(opts);
-        fclose(output);
-        exit(-1);
-    }
-
+    const char* cp = filterOutGarbage(input,opts);
+    //cp is guaranteed to be not null
     createHeader(output,opts);
-    if (transpileToAsm(cp,output,opts->gridSize)==-1) {
-        free(opts);
-        fclose(output);
-        free(cp);
-        exit(-1);
-    }
+    transpileToAsm(cp,output,opts->gridSize);
+    //after here transpiling went good
     fclose(output);
     puts("Compiled file provided");
-    free(cp);
-    return 0;
 }
