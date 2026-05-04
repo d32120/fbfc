@@ -1,0 +1,32 @@
+# This is an example of Trivial BrainF**k Substitution file you can link in an options file
+# Feel free to change this as you want.
+
+# The corresponding of > in BrainF**k. Note that even if the first char is the start of a comment,
+# the value is parsed as ("greater",";<Z/")
+# Each occurrence of ";<Z/" in the source file will be treated as a > sign
+greater: ;<Z/
+
+# The corresponding of < in BrainF**k. As before, note that the first char is the start of a comment.
+# The value will be ("less","#uths")
+less:#uths
+
+# The corresponding of [ in Brainf**k
+loopstart:(___)
+
+# The corresponding of ] in Brainf**k
+loopend:(/* *)/
+
+# The corresponding of . in Brainf**k
+dot:(*_*)
+
+# The corresponding of , in Brainf**k
+comma:(°O°)
+
+# The corresponding of + in Brainf**k
+inc:°_°
+
+# The corresponding of - in Brainf**k
+dec:-_-*
+
+
+

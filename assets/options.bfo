@@ -1,0 +1,27 @@
+# This is an example of options file you can pass to fbfc.
+# Each comment line must start with either # or ;.
+# A comment on the same line of a name:value pair will be treated as a part of the value.
+# For example, this:
+# foo:  baz ;comment
+# will be parsed as ("foo","baz ;comment").
+# You can set values either using name:value or name=value, both are accepted.
+# The length of a line CAN'T be more than 197 chars (including whitespaces)
+
+# The length of the tape (byte[]). Must fit in an int32_t so values between 0 and 2.147.483.647 are accepted.
+gridSize:100
+
+# Throws an error and stops the execution if finds a non-commented char in the original file.
+# The char marking the start of a comment is '%'
+# if the value is "false" fbfc won't throw, else it will.
+throw:false
+
+# Output logs
+# if the value is "false" fbfc won't output logs, else it will.
+logs:true
+
+# Filename of the subs.tbs file used for tbs languages. Leave empty for plain Brainf**k
+subs:
+
+# For example, this will be a valid value for subs:
+; subs: subexample.tbs
+# where subexample.tbs is contained in the same folder and well-formed.

@@ -1,8 +1,8 @@
 #include <stdlib.h>
 
-#include "compiler.h"
-#include "c/mmemory.h"
-#include "c/option_parser.h"
+#include "compiler/compiler.h"
+#include "compiler/mmemory.h"
+#include "compiler/option_parser.h"
 #include "include/cli/cli.h"
 
 int main(int argc, char **argv) {
@@ -10,11 +10,14 @@ int main(int argc, char **argv) {
     char* infile = NULL;
     char* optsn=NULL;
     int throw=-1;
-    clioptions("my program", argc, argv) {
-        cliopt("-h\tThis help") {
+
+    clioptions("fbfc", argc, argv) {
+
+        cliopt("-h\tPrints an help message") {
             cliusage(CLIEXIT);
         }
-        cliopt("-S, --asm\tBe verbose") {
+
+        cliopt("-S, --asm\tOutput only assembly file") {
             outAsm=true;
         }
 
@@ -29,16 +32,17 @@ int main(int argc, char **argv) {
         cliopt("-t, --throw\tThrow an error if found an unexpected char (overrides options file)") {
             throw=1;
         }
+
         cliopt("-nt, --nothrow\tDon't throw an error if found an unexpected char (overrides options file)") {
             throw = 0;
         }
 
-        cliopt() {    // mandatory catch-all, last
-            if (cliarg[0] == '!') {cliexit();}      // stop scanning
+        cliopt() {
+            cliexit();
         }
     }
     options opts;
-    init(optsn,&opts);
+    createOptions(optsn,&opts);
     switch (throw) {
         case 1: opts.throw=true;break;
         case 0 :opts.throw=false;break;
@@ -50,10 +54,9 @@ int main(int argc, char **argv) {
         ERROR("Could not open input file")
     }
     compileToAsm(inf,&opts);
-   if (outAsm) {
-       return 0;
-   }
+    if (outAsm) {
+        return 0;
+    }
     nasmCompile("bfproject.asm");
-    puts("Compiled project into an object file. Now pass it into the linker.");
     return 0;
 }

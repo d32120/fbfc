@@ -2,13 +2,14 @@
 #ifndef BFC_OPTION_PARSER_H
 #define BFC_OPTION_PARSER_H
 #include <stdbool.h>
+#include <stdint.h>
 
 
 typedef struct {
-    char* greaterThan,
-    *lessThan,
-    *pointerLeft,
-    *pointerRight,
+    char* goRight,
+    *goLeft,
+    *increment,
+    *decrement,
     *loopStart,
     *loopEnd,
     *printCur,
@@ -17,12 +18,10 @@ typedef struct {
 
 typedef struct{
     bool throw, logs;
-    int gridSize;
+    int32_t gridSize;
     tbs* sub;
 } options;
 
-int init(char*,options*);
-
-int createProject(void);
+int createOptions(char*,options*);
 
 #endif //BFC_OPTION_PARSER_H

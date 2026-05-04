@@ -19,6 +19,7 @@
 
 //.  SPDX-FileCopyrightText: © 2025 Remo Dentato (rdentato@gmail.com)
 //.  SPDX-License-Identifier: MIT
+
 #ifndef VRG_VERSION
 #define VRG_VERSION 0x0021000B // 0.21.0-beta
 #define VRG_jn(x,y)    VRG_exp(x ## y)

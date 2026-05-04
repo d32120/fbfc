@@ -105,7 +105,7 @@ INI_API int ini_parse_string_length(const char* string, size_t length, ini_handl
    configparser. If allowed, ini_parse() will call the handler with the same
    name for each subsequent line parsed. */
 #ifndef INI_ALLOW_MULTILINE
-#define INI_ALLOW_MULTILINE 1
+#define INI_ALLOW_MULTILINE 0
 #endif
 
 /* Nonzero to allow a UTF-8 BOM sequence (0xEF 0xBB 0xBF) at the start of
@@ -124,10 +124,10 @@ INI_API int ini_parse_string_length(const char* string, size_t length, ini_handl
    specified by INI_INLINE_COMMENT_PREFIXES). Set to 0 to turn off and match
    Python 3.2+ configparser behaviour. */
 #ifndef INI_ALLOW_INLINE_COMMENTS
-#define INI_ALLOW_INLINE_COMMENTS 1
+#define INI_ALLOW_INLINE_COMMENTS 0
 #endif
 #ifndef INI_INLINE_COMMENT_PREFIXES
-#define INI_INLINE_COMMENT_PREFIXES ";#"
+#define INI_INLINE_COMMENT_PREFIXES ";#" //unused cause INI_ALLOW_INLINE_COMMENTS is 0
 #endif
 
 /* Nonzero to use stack for line buffer, zero to use heap (malloc/free). */
@@ -170,7 +170,7 @@ INI_API int ini_parse_string_length(const char* string, size_t length, ini_handl
    call the handler with value NULL in this case. Default is to treat
    no-value lines as an error. */
 #ifndef INI_ALLOW_NO_VALUE
-#define INI_ALLOW_NO_VALUE 0
+#define INI_ALLOW_NO_VALUE 1
 #endif
 
 /* Nonzero to use custom ini_malloc, ini_free, and ini_realloc memory
